@@ -8,20 +8,32 @@ The WikiArt painting detail page is Angular (client-side rendered), but a Chrome
 
 The page uses Schema.org microdata (`itemprop` attributes) for several fields, which are more stable than arbitrary class names.
 
-### XPath Selectors (painting detail page)
+### DOM Structure (painting detail page)
 
-| Field | XPath |
-|---|---|
-| title | `//article/h3/text()` |
-| originalTitle | `//li[.//s[contains(.,'Original Title:')]]` |
-| artist | `//article/h5[@itemprop='creator']//span[@itemprop='name']/a/text()` |
-| date | `//li[.//s[contains(.,'Date:')]]/span[@itemprop='dateCreated']/text()` |
-| style | `//li[.//s[contains(.,'Style:')]]/span/a` |
-| genre | `//li[.//s[contains(.,'Genre:')]]/span/a/span[@itemprop='genre']/text()` |
-| medium | `//li[.//s[contains(.,'Media:')]]/span/a/text()` |
-| image variants | `//ul[@class='image-variants-container']//a/@data-image-url` |
+All painting metadata lives inside `div.wiki-layout-artwork-info[itemscope][itemtype="https://schema.org/Painting"]`.
 
-Fields not in the scrapers found (period, copyright, last-edit) likely follow the same `//li[.//s[contains(.,'FIELDNAME:')]]` pattern and should be verified during implementation.
+**Main article** (`article[ng-init]` inside the above div) contains an `<h3>` (title), an `<h5 itemprop="creator">` (artist), and a `<ul>` of metadata `<li>`s. Each `<li>` has an `<s>` label element followed by the value. Labels found: "Original Title:", "Date:", "Style:", "Period:", "Genre:", "Media:". Order varies between paintings.
+
+**Aside** (also inside the wrapper div) contains copyright (`div.copyright-wrapper`) and last-edit (`div.text-info > span`).
+
+### Selectors
+
+| Field | Method | Selector / notes |
+|---|---|---|
+| title | XPath | `//article/h3` |
+| artist | XPath | `//article/h5[@itemprop='creator']//span[@itemprop='name']/a` |
+| originalTitle | XPath | `//li[.//s[contains(.,'Original Title:')]]/text()[normalize-space()]` — bare text node after the `<s>` |
+| displayDate | XPath | `//li[.//s[contains(.,'Date:')]]//span[@itemprop='dateCreated']` |
+| location | querySelector | First `<span>` child of date `<li>`; get full `textContent`, split on first `";"`, take remainder. Two formats observed: explicit `span[itemprop="locationCreated"]` (with nested name span + bare text node), or bare text node with no itemprop. |
+| style | XPath | `//li[.//s[contains(.,'Style:')]]/span/a` (li has class `dictionary-values`) |
+| period | XPath | `//li[.//s[contains(.,'Period:')]]/a` |
+| genre | XPath | `//li[.//s[contains(.,'Genre:')]]/span/a` |
+| medium | XPath | `//li[.//s[contains(.,'Media:')]]/span/a` |
+| copyright | querySelector | `div.copyright-wrapper`. Two formats: (a) two `<a>`s with classes `copyright-author` + `copyright-clear`, combined as "Author / License"; (b) single `<a class="copyright">` with full text (e.g. "Public Domain") |
+| lastEdit | XPath | `//aside//div[contains(@class,'text-info')]/span` |
+| image | querySelector | `img[itemprop="image"]`, fallback `.wiki-layout-artist-image-wrapper img` |
+
+The `image-variants-container` element (present on some paintings) represents alternate scans of the same work, not size variants — ignore it.
 
 ### Image URLs
 
@@ -77,7 +89,7 @@ Artist pages follow: `wikiart.org/en/{artist-slug}/all-works/text-list` (not in 
 
 - Local HTTP API on port 8765, auto-starts when Anki opens
 - All responses: `{ "result": ..., "error": ... }`
-- CORS: extension origin must be whitelisted in AnkiConnect config (one-time user setup)
+- CORS: in testing, no CORS whitelist change was required — AnkiConnect's default config accepted requests from the extension origin
 
 ### Relevant actions
 

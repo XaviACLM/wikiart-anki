@@ -2,7 +2,7 @@
 
 ## Overview
 
-A Chrome extension that adds a button to WikiArt painting detail pages. Clicking it extracts the painting's metadata and image, shows a review popup where the user can edit fields before confirming, then creates a note in Anki via AnkiConnect.
+A Chrome extension that adds paintings from WikiArt to Anki with one click.
 
 ---
 
@@ -45,20 +45,22 @@ interface Painting {
   title: string | null;
   artist: string | null;
   originalTitle: string | null;
-  date: string | null;
+  displayDate: string | null;   // raw date string as shown on WikiArt, e.g. "c. 1300 BC"
+  sortDate: string | null;      // best-effort numeric year offset by +200000 for lex sorting
+  location: string | null;
   style: string | null;
   period: string | null;
   genre: string | null;
   medium: string | null;
   imageUrl: string | null;
-  // Optional / informational
   copyright: string | null;
   lastEdit: string | null;
-  resolution: string | null;
 }
 ```
 
-Each field is nullable — extraction failures produce `null`, not crashes or empty strings. The review popup visually flags `null` fields so the user knows to fill them in manually.
+Each field is nullable — extraction failures produce `null`, not crashes or empty strings. The review popup visually flags `null` fields (except soft fields: `originalTitle`, `location`, `medium`, `period`) so the user knows to fill them in manually.
+
+`sortDate` is computed from `displayDate` by stripping circa prefixes, extracting the first 3–4 digit year, negating for BC/BCE, and adding 200000. Fails gracefully to `null` for unparseable dates (e.g. "XIX-XX cent").
 
 ---
 
@@ -67,11 +69,9 @@ Each field is nullable — extraction failures produce `null`, not crashes or em
 **Target pages**: painting detail pages only (e.g. `wikiart.org/en/{artist}/{painting}`).
 **Extensibility**: extraction logic is isolated in `content.ts` behind a clear interface so artist pages or other page types can be added later without restructuring.
 
-**Method**: DOM scraping. The page is Angular (client-side rendered) but content scripts run after full load, so the DOM is fully populated. See RESEARCH.md for XPath selectors.
+**Method**: DOM scraping. The page is Angular (client-side rendered) but content scripts run after full load, so the DOM is fully populated. See RESEARCH.md for selectors.
 
-The page uses Schema.org microdata (`itemprop` attributes) for several fields, making those selectors more stable than class-based ones. Fields without microdata use the consistent `//li[.//s[contains(.,'FIELDNAME:')]]` pattern.
-
-**Circa detection**: light heuristic pass on the `date` field to detect prefixes like "c.", "ca.", "~", "?" and set `circa` accordingly. User can correct in review.
+The page uses Schema.org microdata (`itemprop` attributes) for several fields, making those selectors more stable than class-based ones. Fields without microdata use the consistent `//li[.//s[contains(.,'FIELDNAME:')]]` pattern. Copyright and lastEdit live in the aside rather than the main article and are extracted via `querySelector`.
 
 ---
 
@@ -100,7 +100,7 @@ The user selects a preferred size in the options page. If the preferred size ret
 Triggered by clicking the extension's toolbar button on a WikiArt painting page.
 
 - Shows all `Painting` fields as editable inputs, pre-filled from extraction
-- `null` fields are visually highlighted
+- `null` fields are visually highlighted (soft fields excepted)
 - Image shown as a small preview (from `imageUrl`)
 - "Add to Anki" button submits to AnkiConnect
 - Clear error messaging if AnkiConnect is unreachable or Anki is not running
@@ -112,7 +112,7 @@ Triggered by clicking the extension's toolbar button on a WikiArt painting page.
 Stored in `chrome.storage.sync`.
 
 **Steps:**
-1. AnkiConnect connection check (shown prominently — error if Anki not running)
+1. AnkiConnect connection check (shown prominently — retry button if error)
 2. Deck selection (dropdown, populated via `deckNames`)
 3. Notetype selection (dropdown, populated via `modelNames`)
 4. Field mapping: for each notetype field, a dropdown mapping to a `Painting` field — includes a "leave empty" option
@@ -125,8 +125,6 @@ Stored in `chrome.storage.sync`.
 ## AnkiConnect Integration
 
 AnkiConnect auto-starts on port 8765 when Anki opens. No special "opening" required.
-
-**Required one-time setup by user**: add the extension's origin to AnkiConnect's `webCorsOriginList` in Anki's config. Documented in README.
 
 **Actions used**:
 - `deckNames` — populate deck dropdown
@@ -165,13 +163,3 @@ Guards only at external boundaries:
 - Automated Anki deck/notetype setup
 - Batch adding from artist pages (structure supports it, implementation deferred)
 - Syncing or updating existing notes
-
----
-
-## User Setup Requirements (README)
-
-To be written. Will cover:
-1. Install AnkiConnect add-on in Anki
-2. Add extension origin to AnkiConnect CORS whitelist
-3. Create Anki notetype manually (or use an existing one)
-4. Configure the extension options page (deck, notetype, field mapping)
