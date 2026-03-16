@@ -3,12 +3,14 @@ import { AnkiConnectError, storeMediaFile, addNote, checkVersion } from "../anki
 
 // --- DOM refs ---
 
-const elLoading    = document.getElementById("loading")!;
-const elStatusBar  = document.getElementById("status-bar")!;
-const elFields     = document.getElementById("fields")!;
-const elPreview    = document.getElementById("image-preview") as HTMLImageElement;
-const btnAdd       = document.getElementById("btn-add") as HTMLButtonElement;
-const btnOptions   = document.getElementById("btn-options") as HTMLButtonElement;
+const elLoading          = document.getElementById("loading")!;
+const elStatusBar        = document.getElementById("status-bar")!;
+const elStatusText       = document.getElementById("status-text")!;
+const elFields           = document.getElementById("fields")!;
+const elPreview          = document.getElementById("image-preview") as HTMLImageElement;
+const btnAdd             = document.getElementById("btn-add") as HTMLButtonElement;
+const btnOptions         = document.getElementById("btn-options") as HTMLButtonElement;
+const btnSwitchLanguage  = document.getElementById("btn-switch-language") as HTMLButtonElement;
 
 const fieldInputs: Record<keyof Omit<Painting, "imageUrl">, HTMLInputElement> = {
   title:         document.getElementById("f-title")         as HTMLInputElement,
@@ -27,14 +29,16 @@ const fieldInputs: Record<keyof Omit<Painting, "imageUrl">, HTMLInputElement> = 
 
 // --- Status helpers ---
 
-function setStatus(message: string, kind: "error" | "warning" | "info"): void {
-  elStatusBar.textContent = message;
+function setStatus(message: string, kind: "error" | "warning" | "info", showSwitchButton = false): void {
+  elStatusText.textContent = message;
   elStatusBar.className = kind;
+  btnSwitchLanguage.style.display = showSwitchButton ? "block" : "none";
 }
 
 function clearStatus(): void {
-  elStatusBar.textContent = "";
+  elStatusText.textContent = "";
   elStatusBar.className = "";
+  btnSwitchLanguage.style.display = "none";
 }
 
 // --- Image URL helpers ---
@@ -71,7 +75,7 @@ function populateForm(painting: Painting): void {
   elLoading.style.display = "none";
   elFields.style.display = "";
 
-  const skipHighlight = new Set<keyof Painting>(["originalTitle", "location", "medium", "period"]);
+  const skipHighlight = new Set<keyof Painting>(["originalTitle", "location", "medium", "period", "lastEdit"]);
 
   for (const [key, input] of Object.entries(fieldInputs) as [keyof Omit<Painting, "imageUrl">, HTMLInputElement][]) {
     const val = painting[key];
@@ -182,18 +186,34 @@ async function init(): Promise<void> {
     return;
   }
 
+  // Check the page is on wikiart.org in English
+  const tabUrl = tab.url ?? "";
+  const langMatch = tabUrl.match(/wikiart\.org\/([a-z]{2})\//);
+  if (langMatch && langMatch[1] !== "en") {
+    elLoading.style.display = "none";
+    setStatus("WikiArt is not in English — extraction requires the English version.", "warning", true);
+    btnSwitchLanguage.addEventListener("click", () => {
+      const englishUrl = tabUrl.replace(/wikiart\.org\/[a-z]{2}\//, "wikiart.org/en/");
+      chrome.tabs.update(tab.id!, { url: englishUrl });
+      window.close();
+    });
+    return;
+  }
+
   let response: MessageFromContent;
   try {
     response = await chrome.tabs.sendMessage(tab.id, { type: "GET_PAINTING_DATA" } satisfies MessageToContent);
-  } catch {
+  } catch (err) {
+    console.error("[wikiart-anki] sendMessage failed (content script not injected?):", err);
     elLoading.style.display = "none";
-    setStatus("Not on a WikiArt page.", "warning");
+    setStatus("Failed to connect to page — try refreshing.", "warning");
     return;
   }
 
   if (response.type === "NOT_A_PAINTING_PAGE") {
+    console.warn("[wikiart-anki] Content script says: not a painting page. URL:", tab.url);
     elLoading.style.display = "none";
-    setStatus("Open a painting page on WikiArt to use this extension.", "warning");
+    setStatus("Failed to recognize as a WikiArt painting page.", "warning");
     return;
   }
 

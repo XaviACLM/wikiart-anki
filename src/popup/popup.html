@@ -29,10 +29,27 @@
       padding: 8px 12px;
       font-size: 12px;
       display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
     }
-    #status-bar.error   { background: #3d1a1a; color: #f08080; display: block; }
-    #status-bar.warning { background: #3d2e00; color: #ffc870; display: block; }
-    #status-bar.info    { background: #1a2d1a; color: #80d080; display: block; }
+    #status-bar.error   { background: #3d1a1a; color: #f08080; display: flex; }
+    #status-bar.warning { background: #3d2e00; color: #ffc870; display: flex; }
+    #status-bar.info    { background: #1a2d1a; color: #80d080; display: flex; }
+
+    #btn-switch-language {
+      display: none;
+      padding: 3px 8px;
+      background: #5a4a00;
+      color: #ffc870;
+      border: 1px solid #7a6600;
+      border-radius: 3px;
+      font-size: 11px;
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    #btn-switch-language:hover { background: #6a5800; }
 
     #image-preview {
       width: 100%;
@@ -127,7 +144,7 @@
   </header>
 
   <div id="loading">Loading…</div>
-  <div id="status-bar"></div>
+  <div id="status-bar"><span id="status-text"></span><button id="btn-switch-language">Switch to English</button></div>
   <img id="image-preview" alt="Painting preview" />
 
   <div id="fields" style="display:none">

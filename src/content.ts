@@ -3,10 +3,10 @@ import type { Painting, MessageToContent, MessageFromContent } from "./types";
 // --- Page type detection ---
 
 function isPaintingPage(): boolean {
-  // Painting pages: wikiart.org/en/{artist}/{painting}
-  // Requires exactly two non-empty path segments after /en/
-  const parts = location.pathname.replace(/^\/en\//, "").split("/").filter(Boolean);
-  return parts.length === 2;
+  // Painting pages: wikiart.org/{lang}/{artist}/{painting}
+  // Pathname has exactly three non-empty segments: language, artist, painting
+  const parts = location.pathname.split("/").filter(Boolean);
+  return parts.length === 3;
 }
 
 // --- Field extraction helpers ---
@@ -185,6 +185,7 @@ chrome.runtime.onMessage.addListener(
     if (message.type !== "GET_PAINTING_DATA") return;
 
     if (!isPaintingPage()) {
+      console.warn("[wikiart-anki] isPaintingPage() returned false. pathname:", location.pathname);
       sendResponse({ type: "NOT_A_PAINTING_PAGE" });
       return;
     }
