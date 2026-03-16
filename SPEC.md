@@ -21,20 +21,19 @@ A Chrome extension that adds a button to WikiArt painting detail pages. Clicking
 
 ```
 src/
-  content.ts        # Runs on WikiArt pages — extracts data, injects button
-  background.ts     # Service worker — handles AnkiConnect fetch calls
+  content.ts        # Runs on WikiArt pages — extracts painting data, responds to popup messages
   popup/
     popup.html
-    popup.ts        # Review UI: shows extracted fields, user edits, confirms
+    popup.ts        # Review UI: requests data from content script, calls AnkiConnect, confirms
   options/
     options.html
-    options.ts      # Config UI: deck, notetype, field mapping
+    options.ts      # Config UI: deck, notetype, field mapping; calls AnkiConnect
   types.ts          # Shared type definitions
-  ankiconnect.ts    # AnkiConnect API wrapper (used by background.ts)
+  ankiconnect.ts    # AnkiConnect API wrapper (used by popup.ts and options.ts)
 manifest.json
 ```
 
-`content.ts` and `background.ts` are kept self-contained (no cross-file imports) so tsc can compile them without a bundler.
+No background service worker needed. The popup calls AnkiConnect directly via `fetch` (`http://localhost:8765` covered by `host_permissions`) and messages the content script directly via `chrome.tabs.sendMessage`. `content.ts` is kept self-contained (no cross-file imports) so tsc can compile it without a bundler. `popup.ts` and `options.ts` can import from `types.ts` and `ankiconnect.ts` since they load via HTML script tags.
 
 ---
 
@@ -156,7 +155,7 @@ Guards only at external boundaries:
 
 - Extraction logic is page-type-aware from the start (`isPaintingPage()`, `isArtistPage()` etc.) even though only painting pages are handled initially
 - Field mapping config is generic — adding new internal fields only requires updating the `Painting` type and the options page dropdown
-- AnkiConnect wrapper is isolated and independently testable
+- AnkiConnect wrapper (`ankiconnect.ts`) is isolated and independently testable
 
 ---
 
