@@ -1,0 +1,32 @@
+{
+  "manifest_version": 3,
+  "name": "WikiArt → Anki",
+  "version": "0.1.0",
+  "description": "Add paintings from WikiArt to Anki with one click.",
+
+  "permissions": [
+    "activeTab",
+    "storage",
+    "tabs"
+  ],
+
+  "host_permissions": [
+    "*://www.wikiart.org/*",
+    "http://127.0.0.1:8765/*"
+  ],
+
+  "content_scripts": [
+    {
+      "matches": ["*://www.wikiart.org/en/*/*"],
+      "js": ["dist/content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+
+  "action": {
+    "default_popup": "dist/popup/popup.html",
+    "default_title": "WikiArt → Anki"
+  },
+
+  "options_page": "dist/options/options.html"
+}

@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>WikiArt → Anki — Settings</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: system-ui, sans-serif;
+      font-size: 14px;
+      background: #1a1a1a;
+      color: #e0e0e0;
+      padding: 24px;
+      max-width: 600px;
+    }
+
+    h1 { font-size: 18px; margin-bottom: 20px; }
+    h2 { font-size: 14px; color: #aaa; margin: 20px 0 10px; text-transform: uppercase; letter-spacing: 0.05em; }
+
+    #anki-status-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    #anki-status {
+      padding: 8px 12px;
+      border-radius: 4px;
+      font-size: 13px;
+      flex: 1;
+    }
+    #anki-status.ok      { background: #1a2d1a; color: #80d080; }
+    #anki-status.error   { background: #3d1a1a; color: #f08080; }
+    #anki-status.loading { background: #2a2a2a; color: #888; }
+
+    #btn-retry {
+      padding: 6px 12px;
+      background: #2a2a2a;
+      color: #aaa;
+      border: 1px solid #444;
+      border-radius: 3px;
+      font-size: 13px;
+      cursor: pointer;
+      display: none;
+    }
+    #btn-retry:hover { background: #333; }
+
+    .form-row {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-bottom: 12px;
+    }
+
+    label {
+      font-size: 12px;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    select, input {
+      background: #2a2a2a;
+      border: 1px solid #444;
+      border-radius: 3px;
+      color: #e0e0e0;
+      padding: 6px 8px;
+      font-size: 14px;
+      width: 100%;
+    }
+
+    select:focus, input:focus {
+      outline: none;
+      border-color: #666;
+    }
+
+    #mapping-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    #mapping-table th {
+      text-align: left;
+      font-size: 12px;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 4px 0;
+      border-bottom: 1px solid #333;
+    }
+
+    #mapping-table td {
+      padding: 4px 0;
+      vertical-align: middle;
+    }
+
+    #mapping-table td:first-child {
+      color: #ccc;
+      width: 40%;
+      padding-right: 12px;
+    }
+
+    #mapping-table select {
+      padding: 4px 6px;
+      font-size: 13px;
+    }
+
+    #btn-save {
+      margin-top: 20px;
+      padding: 9px 20px;
+      background: #2a5a2a;
+      color: #e0e0e0;
+      border: none;
+      border-radius: 3px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    #btn-save:hover:not(:disabled) { background: #336633; }
+    #btn-save:disabled { opacity: 0.4; cursor: default; }
+
+    #save-status {
+      margin-top: 10px;
+      font-size: 13px;
+      height: 18px;
+    }
+    #save-status.ok    { color: #80d080; }
+    #save-status.error { color: #f08080; }
+  </style>
+</head>
+<body>
+  <h1>WikiArt → Anki Settings</h1>
+
+  <div id="anki-status-row">
+    <div id="anki-status" class="loading">Connecting to AnkiConnect…</div>
+    <button id="btn-retry">Retry</button>
+  </div>
+
+  <h2>Deck &amp; Notetype</h2>
+
+  <div class="form-row">
+    <label for="sel-deck">Deck</label>
+    <select id="sel-deck" disabled><option value="">— loading —</option></select>
+  </div>
+
+  <div class="form-row">
+    <label for="sel-model">Notetype</label>
+    <select id="sel-model" disabled><option value="">— loading —</option></select>
+  </div>
+
+  <h2>Image</h2>
+
+  <div class="form-row">
+    <label for="sel-image-size">Preferred image size</label>
+    <select id="sel-image-size">
+      <option value="Portrait">Portrait (max 400px)</option>
+      <option value="Blog">Blog (max 500px)</option>
+      <option value="Large" selected>Large (max 600–750px)</option>
+      <option value="HD">HD (max 1200px)</option>
+      <option value="Original">Original (full resolution)</option>
+    </select>
+  </div>
+
+  <h2>Field Mapping</h2>
+  <p style="font-size:12px;color:#666;margin-bottom:10px;">
+    For each Anki notetype field, choose which painting data to put in it.
+  </p>
+
+  <table id="mapping-table">
+    <thead>
+      <tr>
+        <th>Anki field</th>
+        <th>Painting data</th>
+      </tr>
+    </thead>
+    <tbody id="mapping-body">
+      <tr><td colspan="2" style="color:#666;padding:8px 0">Select a notetype to configure mapping.</td></tr>
+    </tbody>
+  </table>
+
+  <button id="btn-save" disabled>Save</button>
+  <div id="save-status"></div>
+
+  <script src="options.js"></script>
+</body>
+</html>

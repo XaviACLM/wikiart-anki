@@ -1,0 +1,14 @@
+{
+  "name": "wikiart-anki",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "esbuild src/content.ts --bundle --outfile=dist/content.js && esbuild src/popup/popup.ts --bundle --outfile=dist/popup/popup.js && esbuild src/options/options.ts --bundle --outfile=dist/options/options.js && node copy-assets.mjs",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.0.299",
+    "esbuild": "^0.21.0",
+    "typescript": "^5.4.0"
+  }
+}

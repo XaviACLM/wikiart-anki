@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>WikiArt → Anki</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: system-ui, sans-serif;
+      font-size: 13px;
+      width: 360px;
+      background: #1a1a1a;
+      color: #e0e0e0;
+    }
+
+    header {
+      padding: 10px 12px;
+      background: #111;
+      border-bottom: 1px solid #333;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    header h1 { font-size: 14px; font-weight: 600; }
+
+    #status-bar {
+      padding: 8px 12px;
+      font-size: 12px;
+      display: none;
+    }
+    #status-bar.error   { background: #3d1a1a; color: #f08080; display: block; }
+    #status-bar.warning { background: #3d2e00; color: #ffc870; display: block; }
+    #status-bar.info    { background: #1a2d1a; color: #80d080; display: block; }
+
+    #image-preview {
+      width: 100%;
+      max-height: 180px;
+      object-fit: contain;
+      background: #111;
+      display: none;
+      border-bottom: 1px solid #333;
+    }
+
+    #fields {
+      padding: 8px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .field-row {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .field-row label {
+      font-size: 11px;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .field-row input {
+      background: #2a2a2a;
+      border: 1px solid #444;
+      border-radius: 3px;
+      color: #e0e0e0;
+      padding: 4px 6px;
+      font-size: 13px;
+      width: 100%;
+    }
+
+    .field-row input.missing {
+      border-color: #8b4000;
+      background: #2a1a0a;
+    }
+
+    .field-row input:focus {
+      outline: none;
+      border-color: #666;
+    }
+
+    footer {
+      padding: 8px 12px;
+      border-top: 1px solid #333;
+      display: flex;
+      gap: 8px;
+    }
+
+    button {
+      flex: 1;
+      padding: 7px;
+      border: none;
+      border-radius: 3px;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    #btn-add {
+      background: #2a5a2a;
+      color: #e0e0e0;
+    }
+    #btn-add:hover:not(:disabled) { background: #336633; }
+    #btn-add:disabled { opacity: 0.4; cursor: default; }
+
+    #btn-options {
+      background: #2a2a2a;
+      color: #aaa;
+      flex: 0 0 auto;
+      padding: 7px 10px;
+    }
+    #btn-options:hover { background: #333; }
+
+    #loading {
+      padding: 24px;
+      text-align: center;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>WikiArt → Anki</h1>
+  </header>
+
+  <div id="loading">Loading…</div>
+  <div id="status-bar"></div>
+  <img id="image-preview" alt="Painting preview" />
+
+  <div id="fields" style="display:none">
+    <div class="field-row"><label>Title</label><input id="f-title" type="text" /></div>
+    <div class="field-row"><label>Artist</label><input id="f-artist" type="text" /></div>
+    <div class="field-row"><label>Original Title</label><input id="f-originalTitle" type="text" /></div>
+    <div class="field-row"><label>Date</label><input id="f-displayDate" type="text" /></div>
+    <div class="field-row"><label>Sort Date</label><input id="f-sortDate" type="text" /></div>
+    <div class="field-row"><label>Location</label><input id="f-location" type="text" /></div>
+    <div class="field-row"><label>Style</label><input id="f-style" type="text" /></div>
+    <div class="field-row"><label>Period</label><input id="f-period" type="text" /></div>
+    <div class="field-row"><label>Genre</label><input id="f-genre" type="text" /></div>
+    <div class="field-row"><label>Medium</label><input id="f-medium" type="text" /></div>
+    <div class="field-row"><label>Copyright</label><input id="f-copyright" type="text" /></div>
+    <div class="field-row"><label>Last Edit</label><input id="f-lastEdit" type="text" /></div>
+  </div>
+
+  <footer>
+    <button id="btn-add" disabled>Add to Anki</button>
+    <button id="btn-options">⚙</button>
+  </footer>
+
+  <script src="popup.js"></script>
+</body>
+</html>

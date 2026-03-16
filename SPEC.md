@@ -9,8 +9,9 @@ A Chrome extension that adds a button to WikiArt painting detail pages. Clicking
 ## Tech Stack
 
 - **Language**: TypeScript
-- **Build & typecheck**: tsc (already in project)
-- **Lint**: eslint (already in project)
+- **Build**: esbuild (bundles each entry point into a single JS file — required because Chrome content scripts cannot use ES modules)
+- **Typecheck**: tsc --noEmit
+- **Lint**: eslint
 - **Extension standard**: Chrome Manifest V3
 - **Anki integration**: AnkiConnect (local HTTP API on port 8765)
 - **No frameworks**: vanilla HTML/CSS/JS for all UI
@@ -33,7 +34,7 @@ src/
 manifest.json
 ```
 
-No background service worker needed. The popup calls AnkiConnect directly via `fetch` (`http://localhost:8765` covered by `host_permissions`) and messages the content script directly via `chrome.tabs.sendMessage`. `content.ts` is kept self-contained (no cross-file imports) so tsc can compile it without a bundler. `popup.ts` and `options.ts` can import from `types.ts` and `ankiconnect.ts` since they load via HTML script tags.
+No background service worker needed. The popup calls AnkiConnect directly via `fetch` (`http://localhost:8765` covered by `host_permissions`) and messages the content script directly via `chrome.tabs.sendMessage`. All three entry points (`content.ts`, `popup.ts`, `options.ts`) are bundled by esbuild into self-contained JS files, so cross-file imports work freely and content scripts have no ES module issues.
 
 ---
 
