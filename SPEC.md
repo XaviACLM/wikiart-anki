@@ -66,7 +66,7 @@ Each field is nullable — extraction failures produce `null`, not crashes or em
 
 ## WikiArt Data Extraction
 
-**Target pages**: painting detail pages only (e.g. `wikiart.org/en/{artist}/{painting}`).
+**Target pages**: painting detail pages only (e.g. `wikiart.org/en/{artist}/{painting}`). The content script matches all language variants (`/*/*/*`) and extraction is language-agnostic; the popup detects non-English pages and shows a "Switch to English" button that redirects the tab before extraction.
 **Extensibility**: extraction logic is isolated in `content.ts` behind a clear interface so artist pages or other page types can be added later without restructuring.
 
 **Method**: DOM scraping. The page is Angular (client-side rendered) but content scripts run after full load, so the DOM is fully populated. See RESEARCH.md for selectors.
@@ -104,6 +104,7 @@ Triggered by clicking the extension's toolbar button on a WikiArt painting page.
 - Image shown as a small preview (from `imageUrl`)
 - "Add to Anki" button submits to AnkiConnect
 - Clear error messaging if AnkiConnect is unreachable or Anki is not running
+- If the active tab is a non-English WikiArt painting page, shows a warning with a "Switch to English" button that redirects the tab to the `/en/` equivalent (extraction requires English labels)
 
 ---
 
