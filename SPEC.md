@@ -58,7 +58,7 @@ interface Painting {
 }
 ```
 
-Each field is nullable — extraction failures produce `null`, not crashes or empty strings. The review popup visually flags `null` fields (except soft fields: `originalTitle`, `location`, `medium`, `period`) so the user knows to fill them in manually.
+Each field is nullable — extraction failures produce `null`, not crashes or empty strings. The review popup visually flags every `null` field so the user knows to fill them in manually.
 
 `sortDate` is computed from `displayDate` by stripping circa prefixes, extracting the first 3–4 digit year, negating for BC/BCE, and adding 200000. Fails gracefully to `null` for unparseable dates (e.g. "XIX-XX cent").
 
@@ -99,8 +99,9 @@ The user selects a preferred size in the options page. If the preferred size ret
 
 Triggered by clicking the extension's toolbar button on a WikiArt painting page.
 
-- Shows all `Painting` fields as editable inputs, pre-filled from extraction
-- `null` fields are visually highlighted (soft fields excepted)
+- Shows one editable input per mapped Anki field (labeled with the Anki field name), pre-filled with the extracted painting value; unmapped fields are not shown
+- Every `null` field is visually highlighted
+- `imageUrl`-mapped fields are excluded from the text input list and handled silently (image preview + `storeMediaFile`)
 - Image shown as a small preview (from `imageUrl`)
 - "Add to Anki" button submits to AnkiConnect
 - Clear error messaging if AnkiConnect is unreachable or Anki is not running

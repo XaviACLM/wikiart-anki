@@ -3,29 +3,17 @@ import { AnkiConnectError, storeMediaFile, addNote, checkVersion } from "../anki
 
 // --- DOM refs ---
 
-const elLoading          = document.getElementById("loading")!;
-const elStatusBar        = document.getElementById("status-bar")!;
-const elStatusText       = document.getElementById("status-text")!;
-const elFields           = document.getElementById("fields")!;
-const elPreview          = document.getElementById("image-preview") as HTMLImageElement;
-const btnAdd             = document.getElementById("btn-add") as HTMLButtonElement;
-const btnOptions         = document.getElementById("btn-options") as HTMLButtonElement;
-const btnSwitchLanguage  = document.getElementById("btn-switch-language") as HTMLButtonElement;
+const elLoading         = document.getElementById("loading")!;
+const elStatusBar       = document.getElementById("status-bar")!;
+const elStatusText      = document.getElementById("status-text")!;
+const elFields          = document.getElementById("fields")!;
+const elPreview         = document.getElementById("image-preview") as HTMLImageElement;
+const btnAdd            = document.getElementById("btn-add") as HTMLButtonElement;
+const btnOptions        = document.getElementById("btn-options") as HTMLButtonElement;
+const btnSwitchLanguage = document.getElementById("btn-switch-language") as HTMLButtonElement;
 
-const fieldInputs: Record<keyof Omit<Painting, "imageUrl">, HTMLInputElement> = {
-  title:         document.getElementById("f-title")         as HTMLInputElement,
-  artist:        document.getElementById("f-artist")        as HTMLInputElement,
-  originalTitle: document.getElementById("f-originalTitle") as HTMLInputElement,
-  displayDate:   document.getElementById("f-displayDate")   as HTMLInputElement,
-  sortDate:      document.getElementById("f-sortDate")      as HTMLInputElement,
-  location:      document.getElementById("f-location")      as HTMLInputElement,
-  style:         document.getElementById("f-style")         as HTMLInputElement,
-  period:        document.getElementById("f-period")        as HTMLInputElement,
-  genre:         document.getElementById("f-genre")         as HTMLInputElement,
-  medium:        document.getElementById("f-medium")        as HTMLInputElement,
-  copyright:     document.getElementById("f-copyright")     as HTMLInputElement,
-  lastEdit:      document.getElementById("f-lastEdit")      as HTMLInputElement,
-};
+// Inputs keyed by Anki field name, populated dynamically from config.fieldMapping
+const dynamicInputs = new Map<string, HTMLInputElement>();
 
 // --- Status helpers ---
 
@@ -69,19 +57,36 @@ async function resolveImageUrl(rawSrc: string, size: ImageSize): Promise<string>
   return base;
 }
 
-// --- Populate form ---
+// --- Build fields ---
 
-function populateForm(painting: Painting): void {
+function buildFields(painting: Painting, config: Config): void {
+  elFields.innerHTML = "";
+  dynamicInputs.clear();
+
+  for (const [ankiField, paintingKey] of Object.entries(config.fieldMapping)) {
+    if (paintingKey === "imageUrl") continue; // shown via image preview, not a text input
+
+    const val = painting[paintingKey];
+
+    const row = document.createElement("div");
+    row.className = "field-row";
+
+    const label = document.createElement("label");
+    label.textContent = ankiField;
+
+    const input = document.createElement("input");
+    input.type = "text";
+    input.value = val ?? "";
+    input.classList.toggle("missing", val === null);
+
+    row.appendChild(label);
+    row.appendChild(input);
+    elFields.appendChild(row);
+    dynamicInputs.set(ankiField, input);
+  }
+
   elLoading.style.display = "none";
   elFields.style.display = "";
-
-  const skipHighlight = new Set<keyof Painting>(["originalTitle", "location", "medium", "period", "lastEdit"]);
-
-  for (const [key, input] of Object.entries(fieldInputs) as [keyof Omit<Painting, "imageUrl">, HTMLInputElement][]) {
-    const val = painting[key];
-    input.value = val ?? "";
-    input.classList.toggle("missing", val === null && !skipHighlight.has(key));
-  }
 
   if (painting.imageUrl) {
     elPreview.src = painting.imageUrl;
@@ -119,29 +124,13 @@ async function handleAdd(painting: Painting, config: Config): Promise<void> {
       storedFilename = await storeMediaFile(resolvedUrl, filename);
     }
 
-    // Build Anki fields from mapping (ankiField → paintingKey)
-    const currentValues: Painting = {
-      title:         fieldInputs.title.value         || null,
-      artist:        fieldInputs.artist.value        || null,
-      originalTitle: fieldInputs.originalTitle.value || null,
-      displayDate:   fieldInputs.displayDate.value   || null,
-      sortDate:      fieldInputs.sortDate.value      || null,
-      location:      fieldInputs.location.value      || null,
-      style:         fieldInputs.style.value         || null,
-      period:        fieldInputs.period.value        || null,
-      genre:         fieldInputs.genre.value         || null,
-      medium:        fieldInputs.medium.value        || null,
-      imageUrl:      painting.imageUrl,
-      copyright:     fieldInputs.copyright.value     || null,
-      lastEdit:      fieldInputs.lastEdit.value      || null,
-    };
-
+    // Build Anki fields from dynamic inputs and image mapping
     const fields: Record<string, string> = {};
     for (const [ankiField, paintingKey] of Object.entries(config.fieldMapping)) {
       if (paintingKey === "imageUrl") {
         if (storedFilename) fields[ankiField] = `<img src="${storedFilename}">`;
       } else {
-        fields[ankiField] = currentValues[paintingKey] ?? "";
+        fields[ankiField] = dynamicInputs.get(ankiField)?.value ?? "";
       }
     }
 
@@ -224,7 +213,7 @@ async function init(): Promise<void> {
   }
 
   // PAINTING_DATA
-  populateForm(response.data);
+  buildFields(response.data, config);
   clearStatus();
 
   btnAdd.addEventListener("click", () => handleAdd(response.data, config));
