@@ -79,9 +79,19 @@ The page uses Schema.org microdata (`itemprop` attributes) for several fields, m
 
 Use AnkiConnect's `storeMediaFile` action, which accepts a URL and downloads the file into Anki's media folder, returning the stored filename. We supply a clean filename derived from `{artist-slug}_{title-slug}.jpg` regardless of the source URL format.
 
-WikiArt serves multiple image sizes via a `data-image-url` list in the DOM (`image-variants-container`). We pick the appropriate size before passing the URL to AnkiConnect (which does no resizing itself). A "preferred image size" option (small / medium / large) will be exposed in the options page.
+The main painting image is identified in the DOM by `img[itemprop="image"]`. Its `src` is read directly — URLs are never constructed, as the CDN shard number and filename are unpredictable.
 
-**Note**: image size behaviour needs investigation before implementing — see RESEARCH.md TODO. Specifically: are WikiArt's size variants fixed pixel dimensions or relative to the original? This determines whether a simple preference setting is sufficient.
+WikiArt serves size variants via URL suffixes on the CDN URL. Available options, in ascending size order:
+
+| UI label | WikiArt suffix | Approx. size |
+|---|---|---|
+| Portrait | `!Portrait.jpg` | max 400px |
+| Blog | `!Blog.jpg` | max 500px |
+| Large | `!Large.jpg` | max 600–750px |
+| HD | `!HD.jpg` | max 1200px |
+| Original | *(no suffix)* | full resolution |
+
+The user selects a preferred size in the options page. If the preferred size returns 404, the extension falls back to Original, which always exists.
 
 ---
 

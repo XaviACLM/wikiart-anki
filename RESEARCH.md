@@ -25,13 +25,33 @@ Fields not in the scrapers found (period, copyright, last-edit) likely follow th
 
 ### Image URLs
 
-Images are stored in a `data-image-url` attribute inside an `image-variants-container` list — WikiArt explicitly serves multiple sizes. The URL seen in the browser address bar (e.g. `banquet-1955(1).jpg!Large.jpg`) is a CDN size-suffixed URL; the `data-image-url` values are cleaner.
+The main painting `<img>` has `itemprop="image"` (Schema.org microdata) — use that as the primary selector. Its `src` is the live URL of whichever image is currently displayed.
 
-**TODO: Image size investigation needed before implementing image selection.**
-- Grab a sample of ~10 paintings and inspect their `image-variants-container`
-- Confirm what size suffixes are consistently available (e.g. `!Large`, `!Blog`, `!PinterestSmall`, `!HD`)
-- Determine whether sizes are fixed pixel dimensions or relative to original painting size
-- If relative: a painting that's originally tiny will still be tiny at `!Large` — this affects whether a simple "preferred size" config option is sufficient or whether we need a max-dimension cap
+URL format: `https://uploads{N}.wikiart.org/images/{artist-slug}/{filename}.jpg[!SUFFIX.jpg]`
+
+- The CDN shard number (`uploads6`, etc.) is unpredictable — do not construct URLs, always read `src` directly from the DOM.
+- The filename can include suffixes like `(1)` for duplicates — same reason to read from DOM, never construct.
+- Strip any existing `!SUFFIX.jpg` from the src to get the base URL, then append the desired suffix.
+
+The `image-variants-container` element exists on some paintings but represents **alternate scans** of the same work, not size variants. Ignore it for our purposes; always use the currently-displayed image src.
+
+### Image Size Variants
+
+Investigated across 10 diverse paintings. All variants preserve aspect ratio.
+
+| WikiArt suffix | Approx. max dimension | Availability |
+|---|---|---|
+| `!Portrait.jpg` | 400px | Usually present |
+| `!Blog.jpg` | 500px | Usually present |
+| `!PinterestSmall.jpg` | 210px wide (ignores height) | Usually present |
+| `!Large.jpg` | 600px or 750px (varies) | Sometimes 404 |
+| `!HD.jpg` | 1200px | Sometimes 404 |
+| *(no suffix)* | Original resolution | Always present |
+
+Notes:
+- Sizes are relative to original painting dimensions (not fixed pixel targets), which is why `!Large` can be either 600 or 750 depending on the source.
+- `!Large` missing implies `!HD` missing. The smaller variants (Portrait, Blog) appear more reliably but cannot be guaranteed.
+- Fallback strategy: if the preferred size returns 404, use the original (no suffix) — it always exists and is the highest resolution available.
 
 ### Page URL pattern
 
