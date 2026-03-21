@@ -71,32 +71,36 @@ function extractCopyright(): string | null {
   }
 }
 
-function extractLocation(): string | null {
-  // Location is embedded in the Date <li> but inconsistently structured:
-  // sometimes as span[itemprop="locationCreated"] (with awkward nesting),
-  // sometimes as a bare text node with no itemprop.
-  // Both cases produce text like "1955; Brussels, Belgium" or "1689; France"
-  // in the outer data span. We split on the first ";" and take what follows.
+function extractDateLiText(): string | null {
+  // Returns the text content of the Date <li>, with the "Date:" label stripped.
+  // e.g. "1955; Brussels, Belgium" or "c. 1300 BC"
   try {
     const dateLi = document.evaluate(
       "//li[.//s[contains(.,'Date:')]]",
       document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null
     ).singleNodeValue as Element | null;
     if (!dateLi) return null;
-
-    // First span is the data span; second is hover info — we want the first.
-    const dataSpan = dateLi.querySelector("span");
-    if (!dataSpan) return null;
-
-    const text = dataSpan.textContent ?? "";
-    const semicolon = text.indexOf(";");
-    if (semicolon === -1) return null;
-
-    const location = text.slice(semicolon + 1).trim();
-    return location || null;
+    const text = dateLi.textContent ?? "";
+return text.replace(/^[\s\S]*?Date:\s*/i, "").trim() || null;
   } catch {
     return null;
   }
+}
+
+function extractDisplayDate(): string | null {
+  const text = extractDateLiText();
+  if (!text) return null;
+  const semicolon = text.indexOf(";");
+  const part = semicolon === -1 ? text : text.slice(0, semicolon);
+  return part.trim() || null;
+}
+
+function extractLocation(): string | null {
+  const text = extractDateLiText();
+  if (!text) return null;
+  const semicolon = text.indexOf(";");
+  if (semicolon === -1) return null;
+  return text.slice(semicolon + 1).trim() || null;
 }
 
 // Best-effort extraction of a sort year from a raw date string.
@@ -142,7 +146,7 @@ function extractPainting(): Painting {
       "//li[.//s[contains(.,'Original Title:')]]/text()[normalize-space()]"
     ),
 
-    displayDate: rawDate,
+    displayDate: extractDisplayDate(),
     sortDate: computeSortDate(rawDate),
 
     location: extractLocation(),

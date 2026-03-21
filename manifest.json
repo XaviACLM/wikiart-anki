@@ -17,7 +17,7 @@
 
   "content_scripts": [
     {
-      "matches": ["*://www.wikiart.org/*/*/*"],
+      "matches": ["*://www.wikiart.org/*"],
       "js": ["dist/content.js"],
       "run_at": "document_idle"
     }
