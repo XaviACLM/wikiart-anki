@@ -11,7 +11,6 @@ A Chrome extension that adds paintings from WikiArt to Anki with one click.
 - **Language**: TypeScript
 - **Build**: esbuild (bundles each entry point into a single JS file — required because Chrome content scripts cannot use ES modules)
 - **Typecheck**: tsc --noEmit
-- **Lint**: eslint
 - **Extension standard**: Chrome Manifest V3
 - **Anki integration**: AnkiConnect (local HTTP API on port 8765)
 - **No frameworks**: vanilla HTML/CSS/JS for all UI
@@ -52,15 +51,17 @@ interface Painting {
   period: string | null;
   genre: string | null;
   medium: string | null;
+  currentLocation: string | null;
   imageUrl: string | null;
   copyright: string | null;
   lastEdit: string | null;
+  pageUrl: string | null;
 }
 ```
 
 Each field is nullable — extraction failures produce `null`, not crashes or empty strings. The review popup visually flags every `null` field so the user knows to fill them in manually.
 
-`sortDate` is computed from `displayDate` by stripping circa prefixes, extracting the first 3–4 digit year, negating for BC/BCE, and adding 200000. Fails gracefully to `null` for unparseable dates (e.g. "XIX-XX cent").
+`sortDate` is computed from the actual date by stripping circa prefixes, extracting the first 3–4 digit year, negating for BC/BCE, and adding 200000. Fails gracefully to `null` for unparseable dates (e.g. "XIX-XX cent").
 
 ---
 
@@ -71,7 +72,7 @@ Each field is nullable — extraction failures produce `null`, not crashes or em
 
 **Method**: DOM scraping. The page is Angular (client-side rendered) but content scripts run after full load, so the DOM is fully populated. See RESEARCH.md for selectors.
 
-The page uses Schema.org microdata (`itemprop` attributes) for several fields, making those selectors more stable than class-based ones. Fields without microdata use the consistent `//li[.//s[contains(.,'FIELDNAME:')]]` pattern. Copyright and lastEdit live in the aside rather than the main article and are extracted via `querySelector`.
+The page uses Schema.org microdata (`itemprop` attributes) for some fields, making those selectors more stable than class-based ones. Most metadata fields use the `//li[.//s[contains(.,'FIELDNAME:')]]` pattern to locate the containing `<li>`, then read text content or child elements from there. Copyright and lastEdit live in the aside rather than the main article and are extracted via `querySelector`.
 
 ---
 

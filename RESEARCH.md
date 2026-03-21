@@ -23,17 +23,17 @@ All painting metadata lives inside `div.wiki-layout-artwork-info[itemscope][item
 | title | XPath | `//article/h3` |
 | artist | XPath | `//article/h5[@itemprop='creator']//span[@itemprop='name']/a` |
 | originalTitle | XPath | `//li[.//s[contains(.,'Original Title:')]]/text()[normalize-space()]` — bare text node after the `<s>` |
-| displayDate | XPath | `//li[.//s[contains(.,'Date:')]]//span[@itemprop='dateCreated']` |
-| location | querySelector | First `<span>` child of date `<li>`; get full `textContent`, split on first `";"`, take remainder. Two formats observed: explicit `span[itemprop="locationCreated"]` (with nested name span + bare text node), or bare text node with no itemprop. |
+| displayDate | textContent | Find `//li[.//s[contains(.,'Date:')]]`, get `textContent` of the `<li>`, strip leading whitespace and "Date:" label (newlines may appear around the label), split on first `";"`, take what's before. |
+| location | textContent | Same `<li>` as displayDate; split on first `";"`, take what's after. Returns `null` if no `";"` present. |
 | style | XPath | `//li[.//s[contains(.,'Style:')]]/span/a` (li has class `dictionary-values`) |
 | period | XPath | `//li[.//s[contains(.,'Period:')]]/a` |
 | genre | XPath | `//li[.//s[contains(.,'Genre:')]]/span/a` |
 | medium | XPath | `//li[.//s[contains(.,'Media:')]]/span/a` |
 | copyright | querySelector | `div.copyright-wrapper`. Two formats: (a) two `<a>`s with classes `copyright-author` + `copyright-clear`, combined as "Author / License"; (b) single `<a class="copyright">` with full text (e.g. "Public Domain") |
 | lastEdit | XPath | `//aside//div[contains(@class,'text-info')]/span` |
+| currentLocation | XPath | `//li[.//s[contains(.,'Location:')]]/span` — `<li class="dictionary-values-gallery">` containing `<s>Location:</s>` and a `<span>` with the value (e.g. "Private Collection") |
 | image | querySelector | `img[itemprop="image"]`, fallback `.wiki-layout-artist-image-wrapper img` |
-
-The `image-variants-container` element (present on some paintings) represents alternate scans of the same work, not size variants — ignore it.
+| pageUrl | — | `window.location.href` |
 
 ### Image URLs
 
