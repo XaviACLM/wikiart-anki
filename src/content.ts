@@ -171,7 +171,13 @@ function extractPainting(): Painting {
       "//li[.//s[contains(.,'Media:')]]/span/a"
     ),
 
+    currentLocation: extractText(
+      "//li[.//s[contains(.,'Location:')]]/span"
+    ),
+
     imageUrl: extractImageUrl(),
+
+    pageUrl: window.location.href,
 
     copyright: extractCopyright(),
 

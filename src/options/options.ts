@@ -13,9 +13,11 @@ const PAINTING_FIELDS: { key: keyof Painting; label: string }[] = [
   { key: "period",        label: "Period" },
   { key: "genre",         label: "Genre" },
   { key: "medium",        label: "Medium" },
-  { key: "imageUrl",      label: "Artwork (image)" },
-  { key: "copyright",     label: "Copyright" },
-  { key: "lastEdit",      label: "Last Edit" },
+  { key: "currentLocation", label: "Current Location" },
+  { key: "imageUrl",        label: "Artwork (image)" },
+  { key: "copyright",       label: "Copyright" },
+  { key: "lastEdit",        label: "Last Edit" },
+  { key: "pageUrl",         label: "Page URL" },
 ];
 
 // --- DOM refs ---

@@ -9,9 +9,11 @@ export interface Painting {
   period: string | null;
   genre: string | null;
   medium: string | null;
+  currentLocation: string | null;
   imageUrl: string | null;
   copyright: string | null;
   lastEdit: string | null;
+  pageUrl: string | null;
 }
 
 // Maps an Anki notetype field name → a Painting field key.
